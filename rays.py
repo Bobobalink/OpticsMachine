@@ -1,6 +1,7 @@
 import drawSvg as draw
 import math
 from dataclasses import dataclass
+from typing import List
 
 @dataclass
 class RaySegment:
@@ -27,7 +28,23 @@ class RaySegment:
 
     return path
 
-  def draw(self):
-    p = draw.Path()
+  def draw(self, **kwargs):
+    p = draw.Path(**kwargs)
     p.M(self.startx, self.startHeight)
     return self.appendDraw(p)
+
+
+class Ray:
+  rays: List[RaySegment] = []
+
+  def __init__(self, startx: float, endx: float, startHeight: float) -> None:
+      self.rays = [RaySegment(startx, endx, startHeight, 0)]
+
+  def draw(self, **kwargs):
+    p = None
+    for ray in self.rays:
+      if p is None:
+        p = ray.draw(**kwargs)
+      else:
+        ray.appendDraw(p)
+    return p

@@ -2,7 +2,7 @@ import math
 import drawSvg as draw
 from dataclasses import dataclass
 from sys import float_info
-from rays import RaySegment
+from rays import Ray, RaySegment
 
 def clamp(x, low, high):
   return min(max(x, low), high)
@@ -55,11 +55,11 @@ class Lens:
 
   # trace the ray through s1 of the lens, truncating the current ray segment
   # and returning the next one
-  def snuFTraceS1(self, ray: RaySegment) -> RaySegment:
+  def _snuFTraceS1(self, ray: RaySegment) -> RaySegment:
     if ray.endx < self.position:
       raise ValueError('ray does not reach lens')
 
-    if abs(ray.endHeight) > self.diameter / 2:
+    if abs(ray.heightAt(self.position)) > self.diameter / 2:
       # ray misses lens above or below, don't change ray and don't make a new ray
       return None
       
@@ -73,11 +73,11 @@ class Lens:
 
   # trace the ray through s2 of the lens, truncating the current ray segment
   # and returning the next one
-  def snuFTraceS2(self, ray: RaySegment, outN: float = 1.0) -> RaySegment:
+  def _snuFTraceS2(self, ray: RaySegment, outN: float = 1.0) -> RaySegment:
     if ray.endx < self.position + self.thickness:
       raise ValueError('ray does not reach lens')
 
-    if abs(ray.endHeight) > self.diameter / 2:
+    if abs(ray.heightAt(self.position + self.thickness)) > self.diameter / 2:
       # ray misses lens above or below, I guess we would have to simulate it leaving the top surface??
       ray.endx = self.position + self.thickness
       return None
@@ -89,6 +89,31 @@ class Lens:
     phi = self.s2Power(ray.n)
     newAng = (ray.n * ray.angle - ray.endHeight * phi) / outN
     return RaySegment(self.position + self.thickness, oldend, ray.endHeight, newAng, outN)
+
+  def snuForward(self, ray: Ray):
+    if len(ray.rays) == 0:
+      raise ValueError('tried to trace empty ray')
+    rs = ray.rays[-1]
+
+    # make sure the last segment of this ray should be able to touch this lens
+    if rs.startx > self.position or rs.endx < self.position + self.thickness:
+      raise ValueError("tried to trace ray that doesn't reach the lens")
+
+    nr = self._snuFTraceS1(rs)
+    if nr is None:
+      # the ray didn't hit the front of the lens, don't touch
+      return
+    
+    outMedium = rs.n
+    rs = nr
+    ray.rays.append(rs)
+
+    nr = self._snuFTraceS2(rs, outMedium)
+    if nr is None:
+      # the ray didn't hit the back of the lens, it already messed with the termination
+      return
+
+    ray.rays.append(nr)
 
 
   def draw(self) -> draw.Path:

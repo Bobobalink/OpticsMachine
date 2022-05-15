@@ -7,8 +7,8 @@
 <path d="M0,0 L150,0" stroke="black" stroke-width="0.5" />
 <path d="M150,-5 L150,5" stroke="black" stroke-width="0.5" />
 <path d="M28.276700280543068,-12.7 A26.25,26.25,0,0,0,28.276700280543068,12.7 L30,12.7 L30,-12.7 Z" fill="gray" />
-<path d="M0,-10 L25,-10.0 L30,-9.361644516902224 L200,23.41668212265506" stroke="red" fill="none" stroke-width="0.25" />
-<path d="M0,-5 L25,-5.0 L30,-4.682112407077707 L200,11.557492834340298" stroke="pink" fill="none" stroke-width="0.25" />
-<path d="M0,10 L25,10.0 L30,9.361644516902224 L200,-23.41668212265506" stroke="cyan" fill="none" stroke-width="0.25" />
+<path d="M0,-10 L25,-10.0 L30,-9.347177010904092 L150,14.597519160965154" stroke="red" fill="none" stroke-width="0.25" />
+<path d="M0,10 L25,10.0 L30,9.347177010904092 L150,-14.597519160965154" stroke="cyan" fill="none" stroke-width="0.25" />
+<path d="M0,-5 L25,-5.0 L30,-4.674967866735333 L150,7.180522900731447" stroke="pink" fill="none" stroke-width="0.25" />
 <circle cx="77.5" cy="0" r="0.5" fill="none" stroke="green" stroke-width="0.5" />
 </svg>
