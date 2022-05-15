@@ -64,20 +64,42 @@ class Lens:
       return None
       
     # terminate ray at the lens
+    oldend = ray.endx
     ray.endx = self.position
 
     phi = self.s1Power(ray.n)
+    newAng = (ray.n * ray.angle - ray.endHeight * phi) / self.n
+    return RaySegment(self.position, oldend, ray.endHeight, newAng, self.n)
+
+  # trace the ray through s2 of the lens, truncating the current ray segment
+  # and returning the next one
+  def snuFTraceS2(self, ray: RaySegment, outN: float = 1.0) -> RaySegment:
+    if ray.endx < self.position + self.thickness:
+      raise ValueError('ray does not reach lens')
+
+    if abs(ray.endHeight) > self.diameter / 2:
+      # ray misses lens above or below, I guess we would have to simulate it leaving the top surface??
+      ray.endx = self.position + self.thickness
+      return None
+      
+    # terminate ray at the lens
+    oldend = ray.endx
+    ray.endx = self.position + self.thickness
+
+    phi = self.s2Power(ray.n)
+    newAng = (ray.n * ray.angle - ray.endHeight * phi) / outN
+    return RaySegment(self.position + self.thickness, oldend, ray.endHeight, newAng, outN)
 
 
   def draw(self) -> draw.Path:
-    # draw the lens centered about (0, 0), optical axis is x axis
+    # optical axis is x axis, left surface midpoint is (self.position, 0)
     p = draw.Path()
 
     # draw the left lens surface
     # if the surface is flat, draw it flat
     if abs(self.s1Radius) >= float_info.max:
-      p.M(self.position - self.thickness / 2, self.diameter / 2)
-      p.L(self.position - self.thickness / 2, -self.diameter / 2)
+      p.M(self.position, self.diameter / 2)
+      p.L(self.position, -self.diameter / 2)
     else:
       # calculate the starting point for the left surface
       s1rad = self.s1Radius
@@ -89,19 +111,20 @@ class Lens:
       # if the lens curves left, the edges go in
       # if the lens curves right, the edges flange out
       if s1Swapped:
-        edgeX = self.thickness / 2 + (s1rad - rcos)
+        edgeX = (s1rad - rcos)
       else:
-        edgeX = self.thickness / 2 - (s1rad - rcos)
+        edgeX = -(s1rad - rcos)
       
       # start at the top left corner of the lens
       p.M(self.position - edgeX, self.diameter / 2)
       p.A(s1rad, s1rad, 0, 0, s1Swapped, self.position - edgeX, -self.diameter / 2)
 
+    # draw the bottom and the right surface
     if abs(self.s2Radius) >= float_info.max:
       # draw the bottom edge of the lens
-      p.L(self.position + self.thickness / 2, -self.diameter / 2)
+      p.L(self.position + self.thickness, -self.diameter / 2)
       # draw the right surface flat
-      p.L(self.position + self.thickness / 2, self.diameter / 2)
+      p.L(self.position + self.thickness, self.diameter / 2)
     else:
       # calculate the starting point for the right surface
       s2rad = self.s2Radius
@@ -114,9 +137,9 @@ class Lens:
       # if the lens curves left, the edges go in
       # if the lens curves right, the edges flange out
       if s2Swapped:
-        edgeX = self.thickness / 2 + (s2rad - rcos)
+        edgeX = self.thickness + (s2rad - rcos)
       else:
-        edgeX = self.thickness / 2 - (s2rad - rcos)
+        edgeX = self.thickness - (s2rad - rcos)
 
       # draw the bottom edge of the lens
       p.L(self.position + edgeX, -self.diameter / 2)
